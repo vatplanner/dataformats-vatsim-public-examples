@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.vatplanner.dataformats.vatsimpublic.entities.TimeSpan;
 import org.vatplanner.dataformats.vatsimpublic.entities.status.BarometricPressure;
 import org.vatplanner.dataformats.vatsimpublic.entities.status.Connection;
+import org.vatplanner.dataformats.vatsimpublic.entities.status.DefaultStatusEntityFactory;
 import org.vatplanner.dataformats.vatsimpublic.entities.status.Facility;
 import org.vatplanner.dataformats.vatsimpublic.entities.status.Flight;
 import org.vatplanner.dataformats.vatsimpublic.entities.status.FlightPlan;
@@ -42,7 +43,7 @@ public class Dump {
     private static final Logger LOGGER = LoggerFactory.getLogger(Dump.class);
 
     private final DataFileParser parser = new DataFileParser();
-    private final GraphImport graphImport = new GraphImport();
+    private final GraphImport graphImport = new GraphImport(new DefaultStatusEntityFactory());
 
     private PrintStream out = System.out;
 
