@@ -13,6 +13,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -73,38 +74,40 @@ public class Dump {
 
     private static void addOptions(Options options) {
         options.addOption(Option
-                .builder(OPTION_NAME_MEMBER_ID)
-                .longOpt("dumpmember")
-                .hasArg()
-                .argName("CID")
-                .desc("only dumps the member identified by given VATSIM certificate ID (repeat option for multiple members)")
-                .build());
+            .builder(OPTION_NAME_MEMBER_ID)
+            .longOpt("dumpmember")
+            .hasArg()
+            .argName("CID")
+            .desc(
+                "only dumps the member identified by given VATSIM certificate ID (repeat option for multiple members)" //
+            )
+            .build());
 
         options.addOption(Option
-                .builder(OPTION_NAME_OUTPUT_FILE)
-                .longOpt("outputfile")
-                .hasArg()
-                .argName("FILE")
-                .desc("writes the resulting dump to given FILE instead of stdout")
-                .build());
+            .builder(OPTION_NAME_OUTPUT_FILE)
+            .longOpt("outputfile")
+            .hasArg()
+            .argName("FILE")
+            .desc("writes the resulting dump to given FILE instead of stdout")
+            .build());
 
         options.addOption(Option
-                .builder(OPTION_NAME_OUTPUT_OVERWRITE)
-                .longOpt("overwrite")
-                .desc("overwrites the specified output file if it already exists")
-                .build());
+            .builder(OPTION_NAME_OUTPUT_OVERWRITE)
+            .longOpt("overwrite")
+            .desc("overwrites the specified output file if it already exists")
+            .build());
 
         options.addOption(Option
-                .builder(OPTION_NAME_OUTPUT_APPEND)
-                .longOpt("append")
-                .desc("appends to the specified output file if it already exists")
-                .build());
+            .builder(OPTION_NAME_OUTPUT_APPEND)
+            .longOpt("append")
+            .desc("appends to the specified output file if it already exists")
+            .build());
 
         options.addOption(Option
-                .builder(OPTION_NAME_HELP)
-                .longOpt("help")
-                .desc("displays this help message")
-                .build());
+            .builder(OPTION_NAME_HELP)
+            .longOpt("help")
+            .desc("displays this help message")
+            .build());
     }
 
     private Dump(CommandLine parameters) {
@@ -118,7 +121,14 @@ public class Dump {
         if (selectedMemberIds.isEmpty()) {
             LOGGER.info("Configured to dump all members; result may be very large!");
         } else {
-            LOGGER.info("Configured to dump only members " + selectedMemberIds.stream().sorted().map(Object::toString).collect(Collectors.joining(", ")));
+            LOGGER.info(
+                "Configured to dump only members "
+                    + selectedMemberIds
+                        .stream()
+                        .sorted()
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", ")) //
+            );
         }
 
         LOGGER.info("Starting to import data files...");
@@ -128,16 +138,17 @@ public class Dump {
         GraphIndex graphIndex = graphImport.getIndex();
 
         if (!selectedMemberIds.isEmpty()) {
-            selectedMemberIds.stream()
-                    .sequential()
-                    .map(graphIndex::getMemberByVatsimId)
-                    .filter(Objects::nonNull)
-                    .forEachOrdered(this::printMember);
+            selectedMemberIds
+                .stream()
+                .sequential()
+                .map(graphIndex::getMemberByVatsimId)
+                .filter(Objects::nonNull)
+                .forEachOrdered(this::printMember);
         } else {
             graphIndex.getAllMembers()
-                    .stream()
-                    .sorted((a, b) -> Integer.compare(a.getVatsimId(), b.getVatsimId()))
-                    .forEachOrdered(this::printMember);
+                .stream()
+                .sorted((a, b) -> Integer.compare(a.getVatsimId(), b.getVatsimId()))
+                .forEachOrdered(this::printMember);
         }
     }
 
@@ -160,7 +171,11 @@ public class Dump {
                 shouldAppend = false;
                 LOGGER.info("Output file " + outputPath + " already exists and will be overwritten");
             } else {
-                System.err.println("Requested output file " + outputPath + " already exists but no handling has been specified: decide for either --append or --overwrite");
+                System.err.println(
+                    "Requested output file "
+                        + outputPath
+                        + " already exists but no handling has been specified: decide for either --append or --overwrite" //
+                );
                 System.exit(1);
             }
         }
@@ -188,7 +203,8 @@ public class Dump {
     }
 
     private void importDataFile(BufferedReader contentReader) {
-        // TODO: check if it makes sense to parallelize parsing again (import moving segments, ordered by record time)
+        // TODO: check if it makes sense to parallelize parsing again (import moving
+        // segments, ordered by record time)
         DataFile dataFile = parser.parse(contentReader);
         graphImport.importDataFile(dataFile);
     }
@@ -204,9 +220,9 @@ public class Dump {
 
     private void printFlights(Member member) {
         member.getFlights()
-                .stream()
-                .sorted(this::compareFlights)
-                .forEachOrdered(this::printFlight);
+            .stream()
+            .sorted(this::compareFlights)
+            .forEachOrdered(this::printFlight);
     }
 
     private int compareFlights(Flight a, Flight b) {
@@ -240,7 +256,12 @@ public class Dump {
 
     private void printFlight(Flight flight) {
         TimeSpan timeSpan = flight.getVisibleTimeSpan();
-        out.println(timeSpan.getStart() + "-" + timeSpan.getEnd() + " " + flight.getCallsign() + " " + flight.getMember().getVatsimId());
+        out.println(
+            timeSpan.getStart()
+                + "-" + timeSpan.getEnd()
+                + " " + flight.getCallsign()
+                + " " + flight.getMember().getVatsimId() //
+        );
 
         flight.getFlightPlans().forEach(this::printFlightPlan);
 
@@ -252,16 +273,24 @@ public class Dump {
 
         Set<Connection> connections = flight.getConnections();
         if (!connections.isEmpty()) {
-            out.println("  connections:      logon           first seen            last seen     server   v base real name");
+            out.println(
+                "  connections:      logon           first seen            last seen     server   v base real name");
             for (Connection connection : connections) {
-                out.println(String.format("     %20s %20s %20s %10s %3d %4s %s", connection.getLogonTime(), connection.getFirstReport().getRecordTime(), connection.getLastReport().getRecordTime(), connection.getServerId(), connection.getProtocolVersion(), connection.getHomeBase(), connection.getRealName()));
+                out.println(String.format(
+                    "     %20s %20s %20s %10s %3d %4s %s",
+                    connection.getLogonTime(),
+                    connection.getFirstReport().getRecordTime(), connection.getLastReport().getRecordTime(),
+                    connection.getServerId(), connection.getProtocolVersion(), connection.getHomeBase(),
+                    connection.getRealName() //
+                ) //
+                );
             }
         }
 
         List<Report> reconstructedReports = flight.getReconstructedReports()
-                .stream()
-                .sorted(this::compareRecordTime)
-                .collect(Collectors.toList());
+            .stream()
+            .sorted(this::compareRecordTime)
+            .collect(Collectors.toList());
         if (!reconstructedReports.isEmpty()) {
             out.println("  reconstructed reports: (data files held incomplete or broken information)");
             for (Report reconstructedReport : reconstructedReports) {
@@ -286,14 +315,40 @@ public class Dump {
         double qnhInHg = (qnh != null) ? qnh.getInchesOfMercury() : Double.NaN;
         int qnhHpa = (int) Math.round((qnh != null) ? qnh.getHectopascals() : 0);
 
-        out.println(String.format("     %20s %8.4f %9.4f %5d %03d %03d %4d %5.2f %4d %04d", point.getReport().getRecordTime(), latitude, longitude, altitudeFeet, flightLevel, point.getHeading(), point.getGroundSpeed(), qnhInHg, qnhHpa, point.getTransponderCode()));
+        out.println(
+            String.format(
+                "     %20s %8.4f %9.4f %5d %03d %03d %4d %5.2f %4d %04d",
+                point.getReport().getRecordTime(),
+                latitude, longitude, altitudeFeet, flightLevel,
+                point.getHeading(), point.getGroundSpeed(),
+                qnhInHg, qnhHpa,
+                point.getTransponderCode() //
+            ) //
+        );
     }
 
     private void printFlightPlan(FlightPlan flightPlan) {
         out.println("  #" + flightPlan.getRevision() + " " + flightPlan.getReportFirstSeen().getRecordTime());
-        out.println("     " + flightPlan.getFlightPlanType() + " " + flightPlan.getDepartureAirportCode() + "-" + flightPlan.getDestinationAirportCode() + "/" + flightPlan.getAlternateAirportCode() + " " + flightPlan.getCommunicationMode() + " " + flightPlan.getDepartureTimePlanned() + " " + flightPlan.getDepartureTimeActual());
-        out.println("     alt " + flightPlan.getAltitudeFeet() + ", TAS " + flightPlan.getTrueAirSpeed() + ", enroute " + flightPlan.getEstimatedTimeEnroute() + ", fuel " + flightPlan.getEstimatedTimeFuel());
-        out.println("     " + flightPlan.getAircraftType() + " " + flightPlan.getSimpleEquipmentSpecification() + " " + flightPlan.getWakeTurbulenceCategory());
+        out.println(
+            "     " + flightPlan.getFlightPlanType()
+                + " " + flightPlan.getDepartureAirportCode()
+                + "-" + flightPlan.getDestinationAirportCode()
+                + "/" + flightPlan.getAlternateAirportCode()
+                + " " + flightPlan.getCommunicationMode()
+                + " " + flightPlan.getDepartureTimePlanned()
+                + " " + flightPlan.getDepartureTimeActual() //
+        );
+        out.println(
+            "     alt " + flightPlan.getAltitudeFeet()
+                + ", TAS " + flightPlan.getTrueAirSpeed()
+                + ", enroute " + flightPlan.getEstimatedTimeEnroute()
+                + ", fuel " + flightPlan.getEstimatedTimeFuel() //
+        );
+        out.println(
+            "     " + flightPlan.getAircraftType()
+                + " " + flightPlan.getSimpleEquipmentSpecification()
+                + " " + flightPlan.getWakeTurbulenceCategory() //
+        );
         out.println("     " + flightPlan.getRoute());
         out.println("     " + flightPlan.getRemarks());
     }
@@ -308,19 +363,31 @@ public class Dump {
 
     private void printFacilities(Member member) {
         member.getFacilities()
-                .stream()
-                .sorted((a, b) -> compareRecordTime(a, b, x -> x.getConnection().getFirstReport()))
-                .forEachOrdered(this::printFacility);
+            .stream()
+            .sorted((a, b) -> compareRecordTime(a, b, x -> x.getConnection().getFirstReport()))
+            .forEachOrdered(this::printFacility);
     }
 
     private void printFacility(Facility x) {
         Connection conn = x.getConnection();
-        out.println(conn.getLogonTime() + "/" + conn.getFirstReport().getRecordTime() + " - " + conn.getLastReport().getRecordTime() + " " + x.getName() + " " + x.getFrequencyKilohertz() + " " + x.getType() + " " + conn.getRealName());
+        out.println(
+            conn.getLogonTime()
+                + "/" + conn.getFirstReport().getRecordTime()
+                + " - " + conn.getLastReport().getRecordTime()
+                + " " + x.getName()
+                + " " + x.getFrequencyKilohertz()
+                + " " + x.getType()
+                + " " + conn.getRealName() //
+        );
 
         x.getMessages()
-                .stream()
-                .sorted((a, b) -> a.getReportFirstSeen().getRecordTime().compareTo(b.getReportFirstSeen().getRecordTime()))
-                .forEachOrdered(msg -> out.println("    " + msg.getReportFirstSeen().getRecordTime() + " " + msg.getMessage().replace("\n", " | ")));
+            .stream()
+            .sorted((a, b) -> a.getReportFirstSeen().getRecordTime().compareTo(b.getReportFirstSeen().getRecordTime()))
+            .forEachOrdered(
+                msg -> out.println(
+                    "    " + msg.getReportFirstSeen().getRecordTime() + " " + msg.getMessage().replace("\n", " | ") //
+                ) //
+            );
     }
 
 }

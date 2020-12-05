@@ -17,6 +17,7 @@ import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -88,10 +89,10 @@ public class FileVisitor {
 
     public void visit(Consumer<BufferedReader> dataConsumer) {
         List<File> files = findAllFiles(basePath)
-                .stream()
-                .filter(this::matchesFilterPattern)
-                .sorted(this::compareFileNames)
-                .collect(Collectors.toList());
+            .stream()
+            .filter(this::matchesFilterPattern)
+            .sorted(this::compareFileNames)
+            .collect(Collectors.toList());
 
         for (File file : files) {
             LOGGER.debug("reading " + file.getAbsolutePath());
@@ -106,7 +107,8 @@ public class FileVisitor {
         }
     }
 
-    private void visitAllParts(Consumer<BufferedReader> dataConsumer, InputStream is) throws IOException, ArchiveException {
+    private void visitAllParts(Consumer<BufferedReader> dataConsumer, InputStream is)
+        throws IOException, ArchiveException {
         String detected;
         try {
             detected = ArchiveStreamFactory.detect(is);
@@ -125,7 +127,8 @@ public class FileVisitor {
             return;
         }
 
-        TreeSet<NamedBufferedReader> bufferedReadersSortedByFileName = new TreeSet<>((x, y) -> x.name.compareToIgnoreCase(y.name));
+        TreeSet<NamedBufferedReader> bufferedReadersSortedByFileName = new TreeSet<>(
+            (x, y) -> x.name.compareToIgnoreCase(y.name));
 
         ArchiveInputStream ais = archiveStreamFactory.createArchiveInputStream(detected, is);
         ArchiveEntry entry;
@@ -202,27 +205,31 @@ public class FileVisitor {
 
     public static void addOptions(Options options) {
         options.addOption(Option
-                .builder(OPTION_NAME_READ_PATH)
-                .longOpt("readpath")
-                .hasArg()
-                .argName("PATH")
-                .desc("path to a single file, an archive file or a directory of either types to read")
-                .build());
+            .builder(OPTION_NAME_READ_PATH)
+            .longOpt("readpath")
+            .hasArg()
+            .argName("PATH")
+            .desc("path to a single file, an archive file or a directory of either types to read")
+            .build() //
+        );
 
         options.addOption(Option
-                .builder(OPTION_NAME_READ_FILTER)
-                .longOpt("readfilter")
-                .hasArg()
-                .argName("REGEX")
-                .desc("regular expression to apply as positive filter on filenames; if archives are to be read, regex must match both archive names and names of files in archives to be read")
-                .build());
+            .builder(OPTION_NAME_READ_FILTER)
+            .longOpt("readfilter")
+            .hasArg()
+            .argName("REGEX")
+            .desc(
+                "regular expression to apply as positive filter on filenames; if archives are to be read, regex must match both archive names and names of files in archives to be read" //
+            )
+            .build() //
+        );
 
         options.addOption(Option
-                .builder(OPTION_NAME_READ_REPORT)
-                .longOpt("readreport")
-                .hasArg()
-                .argName("COUNT")
-                .desc("logs a status report after reading every COUNT files")
-                .build());
+            .builder(OPTION_NAME_READ_REPORT)
+            .longOpt("readreport")
+            .hasArg()
+            .argName("COUNT")
+            .desc("logs a status report after reading every COUNT files")
+            .build());
     }
 }
