@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -37,22 +38,27 @@ import org.vatplanner.dataformats.vatsimpublic.examples.common.FileVisitor;
 import org.vatplanner.dataformats.vatsimpublic.graph.GraphImport;
 import org.vatplanner.dataformats.vatsimpublic.graph.GraphIndex;
 import org.vatplanner.dataformats.vatsimpublic.parser.DataFile;
-import org.vatplanner.dataformats.vatsimpublic.parser.DataFileParser;
+import org.vatplanner.dataformats.vatsimpublic.parser.DataFileFormat;
+import org.vatplanner.dataformats.vatsimpublic.parser.DataFileParserFactory;
+import org.vatplanner.dataformats.vatsimpublic.parser.Parser;
 
 public class Dump {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Dump.class);
 
-    private final DataFileParser parser = new DataFileParser();
     private final GraphImport graphImport = new GraphImport(new DefaultStatusEntityFactory());
 
+    private Parser<DataFile> parser;
     private PrintStream out = System.out;
 
     private static final String OPTION_NAME_MEMBER_ID = "dm";
     private static final String OPTION_NAME_OUTPUT_FILE = "of";
     private static final String OPTION_NAME_OUTPUT_OVERWRITE = "oo";
     private static final String OPTION_NAME_OUTPUT_APPEND = "oa";
+    private static final String OPTION_NAME_FORMAT = "f";
     private static final String OPTION_NAME_HELP = "h";
+
+    private static final DataFileFormat DEFAULT_FORMAT = DataFileFormat.JSON3;
 
     private final CommandLine parameters;
 
@@ -104,6 +110,19 @@ public class Dump {
             .build());
 
         options.addOption(Option
+            .builder(OPTION_NAME_FORMAT)
+            .longOpt("format")
+            .hasArg()
+            .argName("FORMAT")
+            .desc(
+                "specifies the format of the data files to be parsed"
+                    + "\nDefault:   " + DEFAULT_FORMAT.name()
+                    + "\nAvailable: "
+                    + Arrays.stream(DataFileFormat.values()).map(Enum::name).collect(Collectors.joining(", ")) //
+            )
+            .build());
+
+        options.addOption(Option
             .builder(OPTION_NAME_HELP)
             .longOpt("help")
             .desc("displays this help message")
@@ -116,6 +135,7 @@ public class Dump {
 
     private void run() {
         configureOutput(parameters);
+        configureParser();
 
         SortedSet<Integer> selectedMemberIds = getSelectedMemberIds(parameters.getOptionValues(OPTION_NAME_MEMBER_ID));
         if (selectedMemberIds.isEmpty()) {
@@ -150,6 +170,25 @@ public class Dump {
                 .sorted((a, b) -> Integer.compare(a.getVatsimId(), b.getVatsimId()))
                 .forEachOrdered(this::printMember);
         }
+    }
+
+    private void configureParser() {
+        String wantedFormatName = parameters.getOptionValue(OPTION_NAME_FORMAT, DEFAULT_FORMAT.name());
+        DataFileFormat wantedFormat = null;
+        try {
+            DataFileParserFactory factory = new DataFileParserFactory();
+            wantedFormat = DataFileFormat.valueOf(wantedFormatName.toUpperCase());
+            parser = factory.createDataFileParser(wantedFormat);
+        } catch (IllegalArgumentException ex) {
+            ex.printStackTrace();
+            System.err.println();
+            System.err.println(
+                "Requested format \"" + wantedFormatName + "\" is unknown or no parser is available to handle it." //
+            );
+            System.exit(1);
+        }
+
+        LOGGER.info("Format {} will be parsed", wantedFormat);
     }
 
     private void configureOutput(CommandLine parameters) {
@@ -205,7 +244,7 @@ public class Dump {
     private void importDataFile(BufferedReader contentReader) {
         // TODO: check if it makes sense to parallelize parsing again (import moving
         // segments, ordered by record time)
-        DataFile dataFile = parser.parse(contentReader);
+        DataFile dataFile = parser.deserialize(contentReader);
         graphImport.importDataFile(dataFile);
     }
 
