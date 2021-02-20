@@ -64,7 +64,7 @@ public class FileVisitor {
     public FileVisitor(CommandLine parameters) {
         basePath = new File(parameters.getOptionValue(OPTION_NAME_READ_PATH));
         filterPattern = Pattern.compile(parameters.getOptionValue(OPTION_NAME_READ_FILTER, ".*"));
-        reportCount = Integer.parseInt(parameters.getOptionValue(OPTION_NAME_READ_REPORT, ""));
+        reportCount = Integer.parseInt(parameters.getOptionValue(OPTION_NAME_READ_REPORT, "-1"));
 
         if (!basePath.exists()) {
             throw new IllegalArgumentException("Path does not exist: " + basePath.getAbsolutePath());
@@ -107,8 +107,7 @@ public class FileVisitor {
         }
     }
 
-    private void visitAllParts(Consumer<BufferedReader> dataConsumer, InputStream is)
-        throws IOException, ArchiveException {
+    private void visitAllParts(Consumer<BufferedReader> dataConsumer, InputStream is) throws IOException, ArchiveException {
         String detected;
         try {
             detected = ArchiveStreamFactory.detect(is);
