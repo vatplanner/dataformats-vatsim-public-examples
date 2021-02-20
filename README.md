@@ -22,6 +22,8 @@ Dumping the complete graph will yield a very large result. `-dm` can be specifie
 
 `-rr` can be used to display a progress status every n files (e.g. `-rr 100` to report every 100th file).
 
+By default, overly precise timestamps will be rounded. Rounding can be disabled using `--no-rounding`.
+
 ```
 usage: dump|dump.sh
  -dm,--dumpmember <CID>     only dumps the member identified by given
@@ -32,6 +34,7 @@ usage: dump|dump.sh
                             Default:   JSON3
                             Available: LEGACY, JSON3
  -h,--help                  displays this help message
+    --no-rounding           disables rounding of output
  -oa,--append               appends to the specified output file if it
                             already exists
  -of,--outputfile <FILE>    writes the resulting dump to given FILE

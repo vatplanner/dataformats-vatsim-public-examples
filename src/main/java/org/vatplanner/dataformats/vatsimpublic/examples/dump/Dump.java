@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -51,11 +52,14 @@ public class Dump {
     private Parser<DataFile> parser;
     private PrintStream out = System.out;
 
+    private boolean isRoundingDisabled = false;
+
     private static final String OPTION_NAME_MEMBER_ID = "dm";
     private static final String OPTION_NAME_OUTPUT_FILE = "of";
     private static final String OPTION_NAME_OUTPUT_OVERWRITE = "oo";
     private static final String OPTION_NAME_OUTPUT_APPEND = "oa";
     private static final String OPTION_NAME_FORMAT = "f";
+    private static final String OPTION_NAME_ROUNDING_DISABLE = "no-rounding";
     private static final String OPTION_NAME_HELP = "h";
 
     private static final DataFileFormat DEFAULT_FORMAT = DataFileFormat.JSON3;
@@ -110,6 +114,12 @@ public class Dump {
             .build());
 
         options.addOption(Option
+            .builder()
+            .longOpt(OPTION_NAME_ROUNDING_DISABLE)
+            .desc("disables rounding of output")
+            .build());
+
+        options.addOption(Option
             .builder(OPTION_NAME_FORMAT)
             .longOpt("format")
             .hasArg()
@@ -136,6 +146,8 @@ public class Dump {
     private void run() {
         configureOutput(parameters);
         configureParser();
+
+        isRoundingDisabled = parameters.hasOption(OPTION_NAME_ROUNDING_DISABLE);
 
         SortedSet<Integer> selectedMemberIds = getSelectedMemberIds(parameters.getOptionValues(OPTION_NAME_MEMBER_ID));
         if (selectedMemberIds.isEmpty()) {
@@ -296,8 +308,8 @@ public class Dump {
     private void printFlight(Flight flight) {
         TimeSpan timeSpan = flight.getVisibleTimeSpan();
         out.println(
-            timeSpan.getStart()
-                + "-" + timeSpan.getEnd()
+            round(timeSpan.getStart())
+                + "-" + round(timeSpan.getEnd())
                 + " " + flight.getCallsign()
                 + " " + flight.getMember().getVatsimId() //
         );
@@ -317,8 +329,9 @@ public class Dump {
             for (Connection connection : connections) {
                 out.println(String.format(
                     "     %20s %20s %20s %10s %3d %4s %s",
-                    connection.getLogonTime(),
-                    connection.getFirstReport().getRecordTime(), connection.getLastReport().getRecordTime(),
+                    round(connection.getLogonTime()),
+                    round(connection.getFirstReport().getRecordTime()),
+                    round(connection.getLastReport().getRecordTime()),
                     connection.getServerId(), connection.getProtocolVersion(), connection.getHomeBase(),
                     connection.getRealName() //
                 ) //
@@ -333,7 +346,7 @@ public class Dump {
         if (!reconstructedReports.isEmpty()) {
             out.println("  reconstructed reports: (data files held incomplete or broken information)");
             for (Report reconstructedReport : reconstructedReports) {
-                out.println("     " + reconstructedReport.getRecordTime());
+                out.println("     " + round(reconstructedReport.getRecordTime()));
             }
         }
 
@@ -357,7 +370,7 @@ public class Dump {
         out.println(
             String.format(
                 "     %20s %8.4f %9.4f %5d %03d %03d %4d %5.2f %4d %04d",
-                point.getReport().getRecordTime(),
+                round(point.getReport().getRecordTime()),
                 latitude, longitude, altitudeFeet, flightLevel,
                 point.getHeading(), point.getGroundSpeed(),
                 qnhInHg, qnhHpa,
@@ -367,15 +380,15 @@ public class Dump {
     }
 
     private void printFlightPlan(FlightPlan flightPlan) {
-        out.println("  #" + flightPlan.getRevision() + " " + flightPlan.getReportFirstSeen().getRecordTime());
+        out.println("  #" + flightPlan.getRevision() + " " + round(flightPlan.getReportFirstSeen().getRecordTime()));
         out.println(
             "     " + flightPlan.getFlightPlanType()
                 + " " + flightPlan.getDepartureAirportCode()
                 + "-" + flightPlan.getDestinationAirportCode()
                 + "/" + flightPlan.getAlternateAirportCode()
                 + " " + flightPlan.getCommunicationMode()
-                + " " + flightPlan.getDepartureTimePlanned()
-                + " " + flightPlan.getDepartureTimeActual() //
+                + " " + round(flightPlan.getDepartureTimePlanned())
+                + " " + round(flightPlan.getDepartureTimeActual()) //
         );
         out.println(
             "     alt " + flightPlan.getAltitudeFeet()
@@ -410,9 +423,9 @@ public class Dump {
     private void printFacility(Facility x) {
         Connection conn = x.getConnection();
         out.println(
-            conn.getLogonTime()
-                + "/" + conn.getFirstReport().getRecordTime()
-                + " - " + conn.getLastReport().getRecordTime()
+            round(conn.getLogonTime())
+                + "/" + round(conn.getFirstReport().getRecordTime())
+                + " - " + round(conn.getLastReport().getRecordTime())
                 + " " + x.getName()
                 + " " + x.getFrequencyKilohertz()
                 + " " + x.getType()
@@ -424,9 +437,25 @@ public class Dump {
             .sorted((a, b) -> a.getReportFirstSeen().getRecordTime().compareTo(b.getReportFirstSeen().getRecordTime()))
             .forEachOrdered(
                 msg -> out.println(
-                    "    " + msg.getReportFirstSeen().getRecordTime() + " " + msg.getMessage().replace("\n", " | ") //
+                    "    " + round(msg.getReportFirstSeen().getRecordTime()) + " "
+                        + msg.getMessage().replace("\n", " | ") //
                 ) //
             );
+    }
+
+    private Instant round(Instant original) {
+        if (original == null) {
+            return null;
+        }
+
+        if (isRoundingDisabled || (original.getNano() == 0)) {
+            return original;
+        }
+
+        Instant truncated = original.truncatedTo(ChronoUnit.SECONDS);
+        Instant rounded = (original.getNano() >= 500_000_000) ? truncated.plusSeconds(1) : truncated;
+
+        return rounded;
     }
 
 }
