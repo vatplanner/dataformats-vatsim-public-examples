@@ -30,11 +30,13 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         
+        <!-- 
         <dependency>
             <groupId>de.energiequant.common</groupId>
             <artifactId>webdataretrieval</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.2.2</version>
         </dependency>
+        -->
         
         <dependency>
             <groupId>org.slf4j</groupId>
