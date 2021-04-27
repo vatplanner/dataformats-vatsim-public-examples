@@ -27,7 +27,7 @@
         <dependency>
             <groupId>org.vatplanner</groupId>
             <artifactId>dataformats-vatsim-public</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1-pre210419</version>
         </dependency>
         
         <!-- 
