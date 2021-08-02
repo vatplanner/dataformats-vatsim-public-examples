@@ -17,7 +17,7 @@
         <!-- runtime dependencies -->
         <slf4j.version>1.7.25</slf4j.version>
         <log4j.version>2.13.3</log4j.version>
-        <compress.version>1.19</compress.version>
+        <compress.version>1.21</compress.version>
         <cli.version>1.4</cli.version>
         <xz.version>1.8</xz.version>
     </properties>
