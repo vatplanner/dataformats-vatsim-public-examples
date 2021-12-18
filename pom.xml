@@ -19,7 +19,7 @@
 		<webDataRetrieval.version>0.2.5</webDataRetrieval.version>
 		
         <slf4j.version>1.7.32</slf4j.version>
-        <log4j.version>2.16.0</log4j.version>
+        <log4j.version>2.17.0</log4j.version>
         <compress.version>1.21</compress.version>
         <cli.version>1.5.0</cli.version>
         <xz.version>1.9</xz.version>
