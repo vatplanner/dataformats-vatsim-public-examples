@@ -20,7 +20,7 @@
 		
         <slf4j.version>1.7.32</slf4j.version>
         <log4j.version>2.17.1</log4j.version>
-        <compress.version>1.21</compress.version>
+        <compress.version>1.26.0</compress.version>
         <cli.version>1.5.0</cli.version>
         <xz.version>1.9</xz.version>
     </properties>
